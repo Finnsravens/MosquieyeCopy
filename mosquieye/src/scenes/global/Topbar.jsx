@@ -3,14 +3,11 @@ import { Box, IconButton, useTheme } from "@mui/material";
 import { useContext } from "react";
 import { ColorModeContext, tokens } from "../../theme";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";;
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, UserButton } from "@clerk/clerk-react";
 
 const Topbar = () => {
   const theme = useTheme();
@@ -33,8 +30,8 @@ const Topbar = () => {
       setSelected("Manage Team");
     } else if (path === "/contacts") {
       setSelected("Contacts Information");
-    } else if (path === "/invoices") {
-      setSelected("Invoices Balances");
+    } else if (path === "/ovitrap") {
+      setSelected("Ovitrap Management");
     } else if (path === "/form") {
       setSelected("Profile Form");
     } else if (path === "/calendar") {
@@ -72,19 +69,8 @@ const Topbar = () => {
             <LightModeOutlinedIcon />
           )}
         </IconButton>
-        <IconButton>
-          <NotificationsOutlinedIcon />
-        </IconButton>
-        <IconButton onClick={() => navigate("/maps")}>
-          <SettingsOutlinedIcon />
-        </IconButton>
-        <IconButton onClick={() => navigate("/profile")}>
-          <PersonOutlinedIcon />
-        </IconButton>
-        
-        {/* Logout Button with Door Icon */}
-        <IconButton onClick={() => signOut()}>
-          <ExitToAppIcon /> {/* Door icon for logout */}
+        <IconButton >
+          <UserButton />
         </IconButton>
       </Box>
     </Box>

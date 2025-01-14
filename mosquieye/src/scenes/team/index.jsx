@@ -7,6 +7,7 @@ import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettin
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
+import { OrganizationProfile, OrganizationList, OrganizationSwitcher, CreateOrganization } from '@clerk/clerk-react';
 
 const Team = () => {
   const theme = useTheme();
@@ -16,25 +17,30 @@ const Team = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/users/all');
-        const usersWithId = response.data.map(user => ({
-          id: user._id, // Use the MongoDB ObjectId as the id
+        const response = await axios.get('/api/users/all');
+        const usersWithId = response.data.map((user, index) => ({
+          rowNumber: index + 1,
+          id: user._id,
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
-          access: 'user', // Assuming a default access level, adjust as needed
+          access: user.role,
           ...user
         }));
         setUsers(usersWithId);
-        console.log('Fetched users:', usersWithId);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
     };
-
     fetchUsers();
   }, []);
 
   const columns = [
+    {
+      field: "rowNumber",
+      headerName: "#",
+      width: 50,
+      sortable: false,
+    },
     { field: "id", headerName: "ID", flex: 1 },
     {
       field: "name",
@@ -52,28 +58,25 @@ const Team = () => {
       headerName: "Access Level",
       flex: 1,
       renderCell: ({ row: { access } }) => {
+        const accessLabel = access === 'org:admin' ? 'Admin' : 'Operations Team';
         return (
           <Box
-            width="60%"
-            m="0 auto"
-            p="5px"
+            width="50%"
+            m="4px auto"
+            p="10px"
             display="flex"
             justifyContent="center"
             backgroundColor={
-              access === "admin"
-                ? colors.greenAccent[600]
-                : access === "manager"
-                ? colors.greenAccent[700]
-                : colors.greenAccent[700]
+              access === 'org:admin' ? colors.greenAccent[600] : colors.blueAccent[600]
             }
             borderRadius="4px"
           >
-            {access === "admin" && <AdminPanelSettingsOutlinedIcon />}
-            {access === "manager" && <SecurityOutlinedIcon />}
-            {access === "user" && <LockOpenOutlinedIcon />}
+            {access === 'org:admin' && <AdminPanelSettingsOutlinedIcon />}
+            {access === 'org:operations_team' && <SecurityOutlinedIcon />}
             <Typography color={colors.grey[100]} sx={{ ml: 1 }}>
-              {access}
+              {accessLabel}
             </Typography>
+            {/* <OrganizationSwitcher /> */}
           </Box>
         );
       },
@@ -83,12 +86,14 @@ const Team = () => {
   return (
     <Box m="20px">
       <Header title="TEAM" subtitle="Managing the Team Members" />
+      <OrganizationSwitcher />
       <Box
-        m="40px 0 0 0"
+        m="20px 0 0 0"
         height="75vh"
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
+            fontSize: "15px",
           },
           "& .MuiDataGrid-cell": {
             borderBottom: "none",
@@ -108,7 +113,7 @@ const Team = () => {
             backgroundColor: colors.blueAccent[700],
           },
           "& .MuiCheckbox-root": {
-            color: `${colors.greenAccent[200]} !important`,
+            color: `${colors.primary[400]} !important`,
           },
         }}
       >

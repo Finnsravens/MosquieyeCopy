@@ -1,5 +1,7 @@
+import React from "react"; // Import React
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Link, useLocation } from "react-router-dom"; // Import necessary hooks
 import "react-pro-sidebar/dist/css/styles.css";
 import { useState, useEffect } from "react"; // Import useState and useEffect
@@ -7,15 +9,15 @@ import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
-import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import AddLocationOutlinedIcon from '@mui/icons-material/AddLocationOutlined';
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import CompareIcon from '@mui/icons-material/Compare';
+import QrCodeIcon from "@mui/icons-material/QrCode";
 import { useUser } from '@clerk/clerk-react';
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -25,18 +27,129 @@ const Item = ({ title, to, icon, selected, setSelected }) => {
     <MenuItem
       active={selected === title}
       style={{
-        color: colors.grey[100],
+        color: colors.primary[100],
       }}
       onClick={() => setSelected(title)}
       icon={icon}
     >
-      <Typography>{title}</Typography>
-      <Link to={to} />
+      <Link to={to}>
+        <Typography 
+          sx={{ 
+            color: theme.palette.mode === 'dark' 
+              ? colors.grey[100] 
+              : colors.primary[100] // Change to black in light mode
+          }}
+        >
+          {title}
+        </Typography>
+      </Link>
     </MenuItem>
   );
 };
 
+
+const menuConfig = [
+  {
+    category: 'Main',
+    items: [
+      {
+        title: "Dashboard",
+        to: "/dashboard",
+        icon: <HomeOutlinedIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      }
+    ]
+  },
+  {
+    category: 'Data',
+    items: [
+      {
+        title: "Manage Team",
+        to: "/team",
+        icon: <PeopleOutlinedIcon />,
+        permissions: ["org:health_office"]
+      },
+      {
+        title: "Contacts Information",
+        to: "/contacts",
+        icon: <ContactsOutlinedIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      },
+      {
+        title: "Ovitrap Management",
+        to: "/ovitrap",
+        icon: <AddLocationOutlinedIcon />,
+        permissions: ["org:health_office"]
+      }
+    ]
+  },
+  {
+    category: 'Pages',
+    items: [
+      {
+        title: "Scan",
+        to: "/scan",
+        icon: <CompareIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      },
+      {
+        title: "QR Scan",
+        to: "/qrscan",
+        icon: <QrCodeIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      },
+      {
+        title: "Calendar",
+        to: "/calendar",
+        icon: <CalendarTodayOutlinedIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      },
+      {
+        title: "Map",
+        to: "/maps",
+        icon: <MapOutlinedIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      },
+      {
+        title: "Analysis History",
+        to: "/analysisHistory",
+        icon: <TimelineOutlinedIcon />,
+        permissions: ["org:health_office", "org:operations_team"]
+      }
+    ]
+  },
+  // {
+  //   category: 'Charts',
+  //   items: [
+  //     {
+  //       title: "Bar Chart",
+  //       to: "/bar",
+  //       icon: <BarChartOutlinedIcon />,
+  //       permissions: ["org:health_office"]
+  //     },
+  //     {
+  //       title: "Pie Chart",
+  //       to: "/pie",
+  //       icon: <PieChartOutlineOutlinedIcon />,
+  //       permissions: ["org:health_office"]
+  //     },
+  //     {
+  //       title: "Line Chart",
+  //       to: "/line",
+  //       icon: <TimelineOutlinedIcon />,
+  //       permissions: ["org:health_office"]
+  //     },
+  //     {
+  //       title: "Geography Chart",
+  //       to: "/geography",
+  //       icon: <MapOutlinedIcon />,
+  //       permissions: ["org:health_office"]
+  //     }
+  // ]
+  // }
+];
 const Sidebar = () => {
+  const isMobile = useMediaQuery("(max-width:600px)");
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { isSignedIn, user, isLoaded } = useUser();
@@ -44,9 +157,7 @@ const Sidebar = () => {
   const [selected, setSelected] = useState("Dashboard");
   const location = useLocation();
 
-  if (!isLoaded) {
-    return null;
-  }
+  const userRole = user?.organizationMemberships?.[0]?.role;
   useEffect(() => {
     // Update the selected state based on the current path
     const path = location.pathname;
@@ -56,8 +167,8 @@ const Sidebar = () => {
       setSelected("Manage Team");
     } else if (path === "/contacts") {
       setSelected("Contacts Information");
-    } else if (path === "/invoices") {
-      setSelected("Invoices Balances");
+    } else if (path === "/ovitrap") {
+      setSelected("Ovitrap Management");
     } else if (path === "/form") {
       setSelected("Profile Form");
     } else if (path === "/calendar") {
@@ -74,13 +185,47 @@ const Sidebar = () => {
       setSelected("Geography Chart");
     } else if (path === "/scan") {
       setSelected("Scan");
+    } else if (path === "/qrscan") { // Add this line if you have a specific route for QR scan
+      setSelected("QR Scan");
     }
-  }, [location]); // Re-run this effect whenever the route changes
+  }, [location.pathname]); // Re-run this effect whenever the route changes
+
+  // Don't render sidebar on mobile
+  if (isMobile) {
+    return null;
+  }
+
+  if (!isLoaded) {
+    return null;
+  }
 
   // Don't show the sidebar when on the login page
   if (location.pathname === "/") {
     return null; // Don't render the sidebar if on the login page
   }
+
+  const hasPermission = (permissions) => {
+    if (userRole === "org:admin") {
+      return true;
+    }
+
+    return permissions.includes(userRole);
+  };
+
+  const renderMenuItems = (items) => {
+    return items
+      .filter(item => hasPermission(item.permissions))
+      .map(item => (
+        <Item
+          key={item.title}
+          title={item.title}
+          to={item.to}
+          icon={item.icon}
+          selected={selected}
+          setSelected={setSelected}
+        />
+      ));
+  };
 
   return (
     <Box
@@ -131,142 +276,67 @@ const Sidebar = () => {
           </MenuItem>
 
           {!isCollapsed && (
-            <Box mb="25px">
+            <Box mb={isMobile ? "15px" : "25px"}>
               <Box display="flex" justifyContent="center" alignItems="center">
                 <img
                   alt="profile-user"
-                  width="100px"
-                  height="100px"
+                  width={isMobile ? "80px" : "100px"}
+                  height={isMobile ? "80px" : "100px"}
                   src={user.imageUrl || "https://via.placeholder.com/120"}
-                  style={{ cursor: "pointer", borderRadius: "50%" }}
+                  style={{ 
+                    cursor: "pointer", 
+                    borderRadius: "50%",
+                    padding: isMobile ? "5px" : "0"
+                  }}
                 />
               </Box>
               <Box textAlign="center">
                 <Typography
-                  variant="h2"
+                  variant={isMobile ? "h3" : "h2"}
                   color={colors.grey[100]}
                   fontWeight="bold"
-                  sx={{ m: "10px 0 0 0" }}
+                  sx={{ m: isMobile ? "5px 0 0 0" : "10px 0 0 0" }}
                 >
                   {user.firstName} {user.lastName}
                 </Typography>
-                <Typography variant="h5" color={colors.greenAccent[500]}>
-                  Staff
+                <Typography 
+                  variant={isMobile ? "h6" : "h5"} 
+                  color={colors.greenAccent[500]}
+                >
+                  {userRole?.replace('org:', '').split('_').map(
+                    word => word.charAt(0).toUpperCase() + word.slice(1)
+                  ).join(' ')}
                 </Typography>
               </Box>
             </Box>
           )}
 
-          <Box paddingLeft={isCollapsed ? undefined : "10%"}>
-            <Item
-              title="Dashboard"
-              to="/dashboard"
-              icon={<HomeOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+          
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              {menuConfig.map(({ category, items }) => {
+                const filteredItems = items.filter(item => 
+                  hasPermission(item.permissions)
+                );
+                
+                if (filteredItems.length === 0) return null;
 
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Data
-            </Typography>
-            <Item
-              title="Manage Team"
-              to="/team"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Contacts Information"
-              to="/contacts"
-              icon={<ContactsOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Recent Total Eggs"
-              to="/invoices"
-              icon={<ReceiptOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Pages
-            </Typography>
-            <Item
-              title="Scan"
-              to="/scan"
-              icon={<PersonOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Profile Form"
-              to="/form"
-              icon={<PersonOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Calendar"
-              to="/calendar"
-              icon={<CalendarTodayOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="FAQ Page"
-              to="/faq"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Charts
-            </Typography>
-            <Item
-              title="Bar Chart"
-              to="/bar"
-              icon={<BarChartOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Pie Chart"
-              to="/pie"
-              icon={<PieChartOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Line Chart"
-              to="/line"
-              icon={<TimelineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Geography Chart"
-              to="/geography"
-              icon={<MapOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+                return (
+                  <React.Fragment key={category}>
+                    <Typography
+                      variant="h6"
+                      color={colors.primary[100]}
+                      sx={{ m: "15px 0 5px 20px" }}
+                    >
+                      {category}
+                    </Typography>
+                    {renderMenuItems(filteredItems)}
+                  </React.Fragment>
+                );
+              })}
           </Box>
+          {
+
+          }
         </Menu>
       </ProSidebar>
     </Box>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
+import axios from 'axios'; // Add this import
 import eventBus from '../../eventBus'; // Assuming you have an event bus setup in your React project
 import cv from "@techstark/opencv-js";
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,6 +10,8 @@ import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import PublishIcon from '@mui/icons-material/Publish';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import HistoryIcon from '@mui/icons-material/History';
+import { useUser } from '@clerk/clerk-react';
 
 // Import styled from '@mui/material/styles'
 import { styled } from '@mui/material/styles';
@@ -76,6 +79,9 @@ const [detailsDialog, setDetailsDialog] = useState(false);
 const location = useLocation();
 const { imageData, imageType: locationImageType, additionalData } = location.state || {};
 const navigate = useNavigate();
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [submitError, setSubmitError] = useState(null);
+const { user } = useUser();
 
 // Create a ref for the canvas container
 const canvasContainerRef = useRef(null);
@@ -443,8 +449,83 @@ document.addEventListener("DOMContentLoaded", function () {
 
   };
 
+const handleSubmit = async () => {
+  try {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    // Get the current canvas data with lower quality
+    const canvas = document.getElementById('overlay');
+    const imageData = canvas.toDataURL('image/jpeg', 0.6); // Reduce quality to 60%
+
+    // Prepare analysis data
+    let ovitrapType = '';
+    if (locationImageType === 'paper') {
+      ovitrapType = 'paper strip';
+    } else if (locationImageType === 'magnified') {
+      ovitrapType = 'magnified';
+    } else if (locationImageType === 'micro') {
+      ovitrapType = 'microscope';
+    }
+
+    const analysisData = {
+      ovitrap: additionalData?.ovitrapId || null,
+      singleEggs: singlesCount,
+      clusteredEggs: parseInt(singlesCalculated),
+      totalEggs: totalEggs,
+      singlesTotalArea: parseFloat(singlesTotalArea),
+      singlesAvg: parseFloat(singlesAvg),
+      clustersCount: clustersCount,
+      clustersTotalArea: parseFloat(clustersTotalArea),
+      avgClusterArea: parseFloat(avgClusterArea),
+      avgEggsPerCluster: parseFloat(avgEggsPerCluster),
+      imageSize: imageSize,
+      scan_by: user?.id || null, // Send as string, not ObjectId
+      ovitrap_type: ovitrapType
+    };
+
+    // Send the request
+    const response = await axios.post('/api/images', {
+      imageData,
+      analysisData: JSON.stringify(analysisData)
+    });
+
+    console.log('Analysis saved:', response.data);
+    alert('Analysis saved successfully!');
+    navigate('/dashboard'); // Optionally redirect after success
+    
+  } catch (error) {
+    console.error('Error details:', error.response?.data || error.message);
+    setSubmitError(error.response?.data?.message || error.message);
+    alert('Error saving analysis: ' + (error.response?.data?.message || error.message));
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+  // Helper function to convert data URI to Blob
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    
+    return new Blob([ab], { type: mimeString });
+  };
+
+// Add history navigation function
+const navigateToHistory = () => {
+  navigate('/analysishistory');
+};
+
   return (
     <Container fluid="true">
+      {/* <h1>Analysis Dashboard</h1>
+      <h2>Detailed Analysis of Scanned Images</h2> */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={8} lg={8} xl={9} style={{ display: analysisStarted ? 'block' : 'none' }}>
           <Card className="elevation-5">
@@ -518,7 +599,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </Grid>
         <Grid item xs={12} md={4} lg={3} xl={3} style={{ paddingLeft: analysisComplete ? '0' : '3' }}>
           {drawer && (
-            <Card className="mb-2" style={{ width: '120%', marginRight: '10%', marginLeft: '5%' }}> {/* Modified this line */}
+            <Card className="mb-2" style={{ width: '100%', marginRight: '10%', marginLeft: '5%' }}> {/* Modified this line */}
               <CardContent>
                 <h4>Filters</h4>
                 <Grid container>
@@ -618,7 +699,7 @@ document.addEventListener("DOMContentLoaded", function () {
               </CardContent>
             </Card>
           )}
-          <Card style={{ width: '120%', marginRight: '10%', marginLeft: '5%' }}> {/* Added same styling as filter card */}
+          <Card style={{ width: '100%', marginRight: '10%', marginLeft: '5%' }}> {/* Added same styling as filter card */}
             <CardContent>
               <Grid container justifyContent="space-between" alignItems="center">
                 <Grid item>
@@ -633,7 +714,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   <ListItemText 
                     primary={
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                        <FiberManualRecordIcon style={{ color: 'blue' }}/>
+                        <FiberManualRecordIcon style={{ color: 'red' }}/>
                         <span style={{ marginLeft: '4px' }}>Single Eggs</span>
                       </div>
                     } 
@@ -644,7 +725,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   <ListItemText 
                     primary={
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                        <FiberManualRecordIcon style={{ color: 'red' }}/>
+                        <FiberManualRecordIcon style={{ color: 'blue' }}/>
                         <span style={{ marginLeft: '4px' }}>Calculated from Clusters</span>
                       </div>
                     } 
@@ -692,7 +773,7 @@ document.addEventListener("DOMContentLoaded", function () {
           </CardActions>
         </Card>
       </Dialog>
-      <div style={{    bottom: 0, width: '80%', display: showBottom ? 'flex' : 'none', justifyContent: 'space-around', height: '50px' }}>
+      <div style={{    bottom: 0, width: '80%', marginBottom:'7%', display: showBottom ? 'flex' : 'none', justifyContent: 'space-around', height: '50px' }}>
         <Button color="primary" onClick={rerender} style={{ color: 'white' }}>
           <span>Reset</span>
           <RestartAltIcon/>
@@ -701,10 +782,23 @@ document.addEventListener("DOMContentLoaded", function () {
           <span>Show Filters</span>
           <FilterAltIcon/>
         </Button>
-        <Button color="primary" style={{ color: 'white' }}>
-          <span>Submit</span>
-          <PublishIcon/>
+        <Button 
+          color="primary" 
+          onClick={handleSubmit} 
+          disabled={isSubmitting}
+          style={{ color: 'white' }}
+        >
+          <span>{isSubmitting ? 'Submitting...' : 'Submit'}</span>
+          <PublishIcon />
         </Button>
+        {/* <Button 
+          color="primary" 
+          onClick={navigateToHistory} 
+          style={{ color: 'white' }}
+        >
+          <span>History</span>
+          <HistoryIcon />
+        </Button> */}
       </div>
     </Container>
   );
