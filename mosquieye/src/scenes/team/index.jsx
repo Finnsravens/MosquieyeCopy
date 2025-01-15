@@ -7,7 +7,7 @@ import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettin
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
-import { OrganizationProfile, OrganizationList, OrganizationSwitcher, CreateOrganization } from '@clerk/clerk-react';
+import { OrganizationSwitcher } from '@clerk/clerk-react';
 
 const Team = () => {
   const theme = useTheme();
@@ -86,7 +86,8 @@ const Team = () => {
   return (
     <Box m="20px">
       <Header title="TEAM" subtitle="Managing the Team Members" />
-      <OrganizationSwitcher />
+      <OrganizationSwitcher
+        hidePersonal={true} />
       <Box
         m="20px 0 0 0"
         height="75vh"
