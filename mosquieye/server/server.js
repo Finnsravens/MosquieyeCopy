@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://mosquieye-prod.vercel.app/']
+    ? ['https://mosquieye-prod.vercel.app/', 'https://mosquieye.netlify.app/']
     : ['http://localhost:3000'],
   credentials: true
 }));
