@@ -21,7 +21,7 @@ import { useUser } from '@clerk/clerk-react'; // Add this import
 
 // Add axios instance with base URL
 const api = axios.create({
-  baseURL: 'http://localhost:5000' // Update this to match your backend URL
+  baseURL: '' // Update this to match your backend URL
 });
 
 // Add custom styles for FullCalendar

@@ -1,0 +1,10 @@
+[[redirects]]
+  from = "/api/*"
+  to = "https://sea-turtle-app-iu5zs.ondigitalocean.app/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
