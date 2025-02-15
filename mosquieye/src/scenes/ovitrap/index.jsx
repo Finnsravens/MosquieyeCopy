@@ -73,7 +73,7 @@ const Ovitrap = () => {
 
   const fetchOvitraps = async () => {
     try {
-      const response = await axios.get('/api/ovitraps');
+      const response = await axios.get(process.env.NODE_ENV === 'production' ? 'https://your-vercel-domain.vercel.app/api/ovitraps' : '/api/ovitraps');
       console.log('Fetched ovitraps:', response.data);
       setOvitraps(response.data.ovitraps);
     } catch (error) {
