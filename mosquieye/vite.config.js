@@ -12,11 +12,9 @@ export default defineConfig({
     port: 3000, // Replace with your desired port
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'production' 
-          ? 'https://mosquieye-server.vercel.app/'
-          : 'http://localhost:5000',
+        target: 'https://sea-turtle-app-iu5zs.ondigitalocean.app/', // Replace with your API server
         changeOrigin: true,
-        secure: false,
+        secure: true,
       }
     },
     fs: {
